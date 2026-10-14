@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Ride Management')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="container" style="margin-top: 30px;">
+    <div style="margin-bottom: 20px;">
+        <a th:href="@{/driver/dashboard}" class="btn btn-secondary btn-sm">⬅ Back to Driver Dashboard</a>
+    </div>
+
+    <div class="grid-2">
+        <!-- Ride Info Card -->
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">Ride Details</h1>
+                <span th:if="${ride.status.name() == 'PLANNED'}" class="badge badge-success">Planned</span>
+                <span th:if="${ride.status.name() == 'ACTIVE'}" class="badge badge-primary">Active</span>
+                <span th:if="${ride.status.name() == 'COMPLETED'}" class="badge badge-secondary">Completed</span>
+                <span th:if="${ride.status.name() == 'CANCELLED'}" class="badge badge-danger">Cancelled</span>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 1.25rem; color: var(--primary); margin-bottom: 6px;">
+                    <span th:text="${ride.sourceAddress}">Origin</span> ➔ <span th:text="${ride.destinationAddress}">Destination</span>
+                </h2>
+                <div style="color: #64748b; font-size: 0.95rem;">
+                    Departure: <strong th:text="${ride.departureDate}">2026-10-15</strong> at <strong th:text="${ride.departureTime}">08:30</strong>
+                </div>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid var(--border-color); padding: 14px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span>Assigned Vehicle:</span>
+                    <strong th:text="${ride.vehicle.displayName}">Toyota Camry</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span>Available Seats:</span>
+                    <strong th:text="${ride.availableSeats} + ' / ' + ${ride.totalSeats}">3 / 4</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span>Total Trip Budget:</span>
+                    <strong th:text="${'$' + ride.totalTripCost}">$20.00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Calculated Seat Contribution:</span>
+                    <strong style="color: #16a34a;" th:text="${'$' + ride.passengerCost}">$3.75</strong>
+                </div>
+            </div>
+
+            <div th:if="${!#lists.isEmpty(ride.stops)}" style="margin-bottom: 20px;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; color: #1e3a8a; margin-bottom: 6px;">En Route Stops:</h3>
+                <ul style="margin-left: 20px; font-size: 0.9rem; color: #334155;">
+                    <li th:each="s : ${ride.stops}" th:text="${s.stopName}">Campus Station</li>
+                </ul>
+            </div>
+
+            <!-- Lifecycle Actions -->
+            <div style="display: flex; gap: 10px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+                <form th:if="${ride.status.name() == 'PLANNED' || ride.status.name() == 'ACTIVE'}" 
+                      th:action="@{/driver/rides/{id}/complete(id=${ride.id})}" method="post">
+                    <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Mark this ride completed?');">
+                        ✓ Mark Completed
+                    </button>
+                </form>
+
+                <form th:if="${ride.status.name() == 'PLANNED' || ride.status.name() == 'ACTIVE'}" 
+                      th:action="@{/driver/rides/{id}/cancel(id=${ride.id})}" method="post">
+                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Cancel this ride? Passengers will be refunded and notified.');">
+                        ✕ Cancel Ride
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Map Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Live Route Corridor</h2>
+                <span class="badge badge-primary">Leaflet.js</span>
+            </div>
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <!-- Passengers on this trip -->
+    <div class="card" style="margin-top: 20px;">
+        <div class="card-header">
+            <h2 class="card-title">Booked Passengers (<span th:text="${#lists.size(bookings)}">0</span>)</h2>
+        </div>
+
+        <div th:if="${#lists.isEmpty(bookings)}" style="padding: 24px; text-align: center; color: var(--text-muted);">
+            No passenger reservations for this trip yet.
+        </div>
+
+        <div th:if="${!#lists.isEmpty(bookings)}" class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Passenger Name</th>
+                        <th>Contact</th>
+                        <th>Pickup & Drop-off</th>
+                        <th>Seats</th>
+                        <th>Fare Share</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="b : ${bookings}">
+                        <td><strong th:text="${b.passenger.fullName}">Passenger Name</strong></td>
+                        <td>
+                            <div th:text="${b.passenger.email}">email</div>
+                            <div th:if="${b.passenger.phone != null}" th:text="${b.passenger.phone}" style="color: #0284c7;">phone</div>
+                        </td>
+                        <td>
+                            <div>Pickup: <span th:text="${b.pickupLocation}">Pickup</span></div>
+                            <div>Dropoff: <span th:text="${b.dropoffLocation}">Dropoff</span></div>
+                        </td>
+                        <td th:text="${b.seatsBooked}">1</td>
+                        <td><strong th:text="${'$' + b.totalFare}">$3.75</strong></td>
+                        <td>
+                            <span th:if="${b.status.name() == 'CONFIRMED'}" class="badge badge-success">Confirmed</span>
+                            <span th:if="${b.status.name() == 'PENDING'}" class="badge badge-warning">Pending</span>
+                            <span th:if="${b.status.name() == 'COMPLETED'}" class="badge badge-primary">Completed</span>
+                            <span th:if="${b.status.name() == 'CANCELLED'}" class="badge badge-danger">Cancelled</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", function () {
+        /*<![CDATA[*/
+        const oLat = /*[[${ride.sourceLatitude}]]*/ 40.7128;
+        const oLng = /*[[${ride.sourceLongitude}]]*/ -74.0060;
+        const dLat = /*[[${ride.destinationLatitude}]]*/ 40.7589;
+        const dLng = /*[[${ride.destinationLongitude}]]*/ -73.9851;
+        const oName = /*[[${ride.sourceAddress}]]*/ "Origin";
+        const dName = /*[[${ride.destinationAddress}]]*/ "Destination";
+
+        const stopsData = [];
+        /*[# th:each="s : ${ride.stops}"]*/
+        stopsData.push({
+            name: /*[[${s.stopName}]]*/ "Stop",
+            lat: /*[[${s.latitude}]]*/ 0.0,
+            lng: /*[[${s.longitude}]]*/ 0.0
+        });
+        /*[/]*/
+
+        initRideMap("map", oLat, oLng, dLat, dLng, stopsData, oName, dName);
+        /*]]>*/
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('In-App Notifications')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="container" style="max-width: 780px; margin-top: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h1 style="font-size: 1.8rem; font-weight: 800;">Notification Center</h1>
+        <form th:action="@{/notifications/read-all}" method="post">
+            <button type="submit" class="btn btn-secondary btn-sm">Mark All as Read</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <div th:if="${#lists.isEmpty(notifications)}" style="text-align: center; padding: 40px; color: var(--text-muted);">
+            <p style="font-size: 1.1rem;">You have no notifications at this time.</p>
+        </div>
+
+        <div th:each="n : ${notifications}" 
+             th:style="${n.read} ? 'border-bottom: 1px solid var(--border-color); padding: 16px 0; opacity: 0.7;' : 'border-bottom: 1px solid var(--border-color); padding: 16px 0; background: #f0fdf4; border-radius: 4px; padding-left: 12px; margin-bottom: 8px;'">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <span th:if="${n.type.name() == 'BOOKING_REQUEST'}" class="badge badge-primary">Booking</span>
+                        <span th:if="${n.type.name() == 'BOOKING_ACCEPTED'}" class="badge badge-success">Approved</span>
+                        <span th:if="${n.type.name() == 'BOOKING_REJECTED'}" class="badge badge-danger">Declined</span>
+                        <span th:if="${n.type.name() == 'BOOKING_CANCELLED'}" class="badge badge-warning">Cancelled</span>
+                        <span th:if="${n.type.name() == 'RIDE_CANCELLED'}" class="badge badge-danger">Trip Cancelled</span>
+                        <span th:if="${n.type.name() == 'RIDE_COMPLETED'}" class="badge badge-success">Completed</span>
+                        <span th:if="${n.type.name() == 'SYSTEM'}" class="badge badge-secondary">System</span>
+                        <strong style="color: #0f172a;" th:text="${n.title}">Notification Title</strong>
+                    </div>
+                    <p style="color: #334155; font-size: 0.95rem; margin-bottom: 4px;" th:text="${n.message}">Message text</p>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);" 
+                         th:text="${#temporals.format(n.createdAt, 'MMM dd, yyyy HH:mm')}">Oct 14, 2026 12:00</div>
+                </div>
+
+                <div th:if="${!n.read}">
+                    <form th:action="@{/notifications/{id}/read(id=${n.id})}" method="post">
+                        <button type="submit" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">Mark Read</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

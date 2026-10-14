@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Smart Ride Search')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="container" style="margin-top: 30px;">
+    <!-- Search Filter Form Card -->
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">Find Compatible Carpools</h1>
+            <span class="badge badge-primary">AI Matching Engine</span>
+        </div>
+
+        <form th:action="@{/passenger/search}" th:object="${searchDto}" method="get">
+            <div class="grid-4">
+                <div class="form-group">
+                    <label class="form-label">Pickup Location / Origin</label>
+                    <input type="text" th:field="*{sourceAddress}" class="form-control" placeholder="e.g. Downtown Transit Center">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Destination</label>
+                    <input type="text" th:field="*{destinationAddress}" class="form-control" placeholder="e.g. Tech Innovation Park">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Travel Date</label>
+                    <input type="date" th:field="*{departureDate}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Seats Needed</label>
+                    <select th:field="*{seatsRequested}" class="form-control">
+                        <option value="1">1 Seat</option>
+                        <option value="2">2 Seats</option>
+                        <option value="3">3 Seats</option>
+                        <option value="4">4 Seats</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                <a th:href="@{/passenger/search}" class="btn btn-secondary btn-sm">Reset</a>
+                <button type="submit" class="btn btn-primary">Find Matches</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Interactive Route Map Container (Leaflet + OpenStreetMap) -->
+    <div class="card" style="padding: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e3a8a;">
+                🗺️ Route Corridor Map & Intermediate Checkpoints
+            </h2>
+            <span style="font-size: 0.8rem; color: #64748b;">Powered by OpenStreetMap & Leaflet.js</span>
+        </div>
+        <div id="map"></div>
+    </div>
+
+    <!-- Match Results Section -->
+    <div style="margin-bottom: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h2 style="font-size: 1.4rem; font-weight: 800; color: #0f172a;">
+                Ranked Compatible Rides
+                <span style="font-size: 0.95rem; font-weight: 600; color: #64748b;" 
+                      th:text="'(' + ${#lists.size(matches)} + ' found)'">(0 found)</span>
+            </h2>
+            <span class="badge badge-success">Algorithm Weights: Route 50% | Time 20% | Cost 20% | Seats 10%</span>
+        </div>
+
+        <div th:if="${#lists.isEmpty(matches)}" class="card" style="text-align: center; padding: 40px 20px;">
+            <p style="font-size: 1.15rem; color: #475569; margin-bottom: 8px;">No matching rides found for these search criteria.</p>
+            <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 20px;">
+                Try searching for a broader date or common hubs like <em>Downtown</em>, <em>University Campus</em>, or <em>Tech Innovation Park</em>.
+            </p>
+            <a th:href="@{/passenger/search}" class="btn btn-primary btn-sm">View All Available Rides</a>
+        </div>
+
+        <!-- Render Matching Ride Cards -->
+        <div th:each="m : ${matches}" class="match-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <!-- Route -->
+                    <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e40af; margin-bottom: 4px;">
+                        <span th:text="${m.ride.sourceAddress}">Origin</span>
+                        <span style="color: #64748b; font-weight: normal;"> ➔ </span>
+                        <span th:text="${m.ride.destinationAddress}">Destination</span>
+                    </h3>
+
+                    <!-- Date, Time, Driver -->
+                    <div style="display: flex; gap: 16px; font-size: 0.9rem; color: #475569; margin-bottom: 10px; flex-wrap: wrap;">
+                        <span>📅 <strong th:text="${m.ride.departureDate}">2026-10-15</strong> at <strong th:text="${m.ride.departureTime}">08:30</strong></span>
+                        <span>🚘 <span th:text="${m.ride.vehicle.displayName}">Toyota Camry</span></span>
+                        <span>👤 Driver: <strong th:text="${m.ride.driver.fullName}">John Driver</strong>
+                            <span th:if="${m.driverRating != null}" style="color: #eab308; font-weight: 700;">
+                                ★ <span th:text="${m.driverRating}">4.9</span> (<span th:text="${m.driverRatingCount}">12</span>)
+                            </span>
+                        </span>
+                    </div>
+
+                    <!-- Intermediate Stops Pill -->
+                    <div th:if="${!#lists.isEmpty(m.ride.stops)}" style="margin-bottom: 10px; font-size: 0.85rem; color: #0369a1;">
+                        📍 <em>Stops along route:</em>
+                        <span th:each="s, iter : ${m.ride.stops}" 
+                              th:text="${s.stopName} + (${!iter.last} ? ' ➔ ' : '')" 
+                              style="font-weight: 600;">Stop 1</span>
+                    </div>
+                </div>
+
+                <!-- Match Score Badge -->
+                <div style="text-align: right;">
+                    <div class="score-badge" th:title="${m.explanation}">
+                        <span>⚡</span>
+                        <span th:text="${m.matchScore + '% Match'}">94.5% Match</span>
+                    </div>
+                    <div style="font-size: 1.3rem; font-weight: 800; color: #0f172a; margin-top: 6px;">
+                        <span th:text="${'$' + m.passengerCost}">$3.75</span>
+                        <span style="font-size: 0.8rem; font-weight: 600; color: #64748b;">/ seat</span>
+                    </div>
+                    <div style="font-size: 0.85rem; color: #16a34a; font-weight: 600;">
+                        <span th:text="${m.ride.availableSeats}">3</span> seat(s) left
+                    </div>
+                </div>
+            </div>
+
+            <!-- Score breakdown indicators -->
+            <div class="score-breakdown">
+                <span class="score-pill">Route Match: <strong th:text="${m.routeScore} + '/50'">48/50</strong></span>
+                <span class="score-pill">Time Alignment: <strong th:text="${m.timeScore} + '/20'">18/20</strong></span>
+                <span class="score-pill">Cost Score: <strong th:text="${m.costScore} + '/20'">18/20</strong></span>
+                <span class="score-pill">Seats Factor: <strong th:text="${m.seatsScore} + '/10'">10/10</strong></span>
+                <span style="color: #475569; font-style: italic;" th:text="${m.explanation}">High route overlap.</span>
+            </div>
+
+            <!-- Action buttons -->
+            <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <button type="button" class="btn btn-secondary btn-sm"
+                        th:attr="onclick='renderRideRoute(' + ${m.ride.sourceLatitude} + ',' + ${m.ride.sourceLongitude} + ',' + 
+                                            ${m.ride.destinationLatitude} + ',' + ${m.ride.destinationLongitude} + ',\'' + 
+                                            ${m.ride.sourceAddress} + '\',\'' + ${m.ride.destinationAddress} + '\')'">
+                    👁️ View on Map
+                </button>
+
+                <div style="display: flex; gap: 10px;">
+                    <a th:href="@{/rides/{id}(id=${m.ride.id})}" class="btn btn-secondary btn-sm">Ride Details</a>
+                    <a th:href="@{/rides/{id}/book(id=${m.ride.id}, seats=${searchDto.seatsRequested})}" 
+                       class="btn btn-primary btn-sm">
+                        Book Seat(s) ➔
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", function () {
+        /*<![CDATA[*/
+        // Initialize Default Map centered on New York / Demo Region
+        const defaultOriginLat = 40.7128;
+        const defaultOriginLng = -74.0060;
+        const defaultDestLat = 40.7589;
+        const defaultDestLng = -73.9851;
+
+        let activeMap = initRideMap("map", defaultOriginLat, defaultOriginLng, defaultDestLat, defaultDestLng, [], "Downtown", "Tech Park");
+
+        window.renderRideRoute = function(oLat, oLng, dLat, dLng, oName, dName) {
+            if (activeMap) {
+                activeMap.remove();
+            }
+            activeMap = initRideMap("map", oLat, oLng, dLat, dLng, [], oName, dName);
+            document.getElementById("map").scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
+        /*]]>*/
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Notice')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<main class="container" style="max-width: 600px; margin-top: 50px; text-align: center;">
+    <div class="card" style="padding: 40px 24px; box-shadow: var(--shadow-md);">
+        <div style="font-size: 3.5rem; font-weight: 900; color: #dc2626; margin-bottom: 8px;" th:text="${errorCode != null ? errorCode : 'Error'}">
+            404
+        </div>
+        <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-bottom: 12px;" th:text="${errorTitle != null ? errorTitle : 'Page Not Found'}">
+            Notice
+        </h1>
+        <p style="color: #64748b; font-size: 1rem; margin-bottom: 24px;" th:text="${errorMessage != null ? errorMessage : 'The requested item or page could not be located.'}">
+            Something unexpected occurred.
+        </p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <a th:href="@{/}" class="btn btn-primary">Return to Home</a>
+            <a th:href="@{/passenger/search}" class="btn btn-secondary">Find Rides</a>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

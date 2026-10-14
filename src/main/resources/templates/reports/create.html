@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Report Ride or User')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="container" style="max-width: 620px; margin-top: 30px;">
+    <div style="margin-bottom: 20px;">
+        <a th:href="@{/rides/{id}(id=${ride.id})}" class="btn btn-secondary btn-sm">⬅ Back to Ride</a>
+    </div>
+
+    <div class="card" style="box-shadow: var(--shadow-md); border-color: #fecaca;">
+        <div class="card-header" style="border-bottom-color: #fee2e2;">
+            <h1 class="card-title" style="color: #991b1b;">Report Safety or Conduct Issue</h1>
+            <span class="badge badge-danger">Trust & Safety</span>
+        </div>
+
+        <p style="color: #475569; font-size: 0.95rem; margin-bottom: 20px;">
+            Our administrative team investigates all reports to maintain a safe, respectful carpooling environment.
+        </p>
+
+        <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 14px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+            <div style="font-weight: 700; color: #991b1b;">Ride #<span th:text="${ride.id}">1</span></div>
+            <div style="font-size: 0.9rem; color: #7f1d1d;" th:text="${ride.sourceAddress} + ' ➔ ' + ${ride.destinationAddress}">Route</div>
+            <div style="font-size: 0.85rem; color: #991b1b; margin-top: 2px;">
+                Driver: <span th:text="${ride.driver.fullName}">Driver</span>
+            </div>
+        </div>
+
+        <form th:action="@{/reports/ride/{id}(id=${ride.id})}" th:object="${reportDto}" method="post">
+            <div class="form-group">
+                <label for="reason" class="form-label">Describe the Concern or Violation *</label>
+                <textarea id="reason" th:field="*{reason}" rows="5" class="form-control" placeholder="Please describe what happened (e.g. safety violation, no-show, improper behavior, mismatched vehicle)..."></textarea>
+                <div class="text-danger" th:if="${#fields.hasErrors('reason')}" th:errors="*{reason}"></div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px;">
+                <a th:href="@{/rides/{id}(id=${ride.id})}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-danger">Submit Report for Review</button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

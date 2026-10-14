@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: header('Intelligent Green Commuting')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main>
+    <!-- Hero Banner -->
+    <section class="hero">
+        <div class="container">
+            <h1>Commute Smarter.<br>Share Costs. Save the Planet.</h1>
+            <p>
+                Connect with drivers traveling your route. Our intelligent matching algorithm
+                finds compatible rides with real-time pickup stops, transparent fare-sharing,
+                and zero surge pricing.
+            </p>
+            <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+                <a th:href="@{/passenger/search}" class="btn btn-primary" style="background-color: #ffffff; color: var(--primary);">Find a Ride</a>
+                <a th:href="@{/register}" class="btn btn-outline" style="border-color: white; color: white;">Become a Driver</a>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <!-- Quick Search Bar Card -->
+        <div class="card" style="margin-top: -60px; position: relative; z-index: 10; box-shadow: var(--shadow-lg);">
+            <div class="card-header">
+                <h2 class="card-title">Search Available Carpools</h2>
+                <span class="badge badge-primary">Smart Route Matching</span>
+            </div>
+            <form th:action="@{/passenger/search}" method="get">
+                <div class="grid-4">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Pickup Origin</label>
+                        <input type="text" name="sourceAddress" class="form-control" placeholder="e.g. Downtown Transit Center" th:value="${searchDto.sourceAddress}">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Destination</label>
+                        <input type="text" name="destinationAddress" class="form-control" placeholder="e.g. Tech Innovation Park" th:value="${searchDto.destinationAddress}">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Date</label>
+                        <input type="date" name="departureDate" class="form-control" th:value="${searchDto.departureDate}">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0; display: flex; align-items: flex-end;">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">Match Rides</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Live Impact Metrics -->
+        <div style="margin: 40px 0 20px 0; text-align: center;">
+            <h2 style="font-size: 1.8rem; font-weight: 700; color: #1e293b;">Collective Campus & City Impact</h2>
+            <p style="color: #64748b;">Real-time statistics from our carpool community</p>
+        </div>
+
+        <div class="grid-4" style="margin-bottom: 50px;">
+            <div class="stat-box">
+                <div class="stat-number" th:text="${stats.totalUsers}">12</div>
+                <div class="stat-label">Registered Members</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" th:text="${stats.totalRides}">8</div>
+                <div class="stat-label">Rides Published</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" th:text="${stats.co2SavedKg + ' kg'}">45 kg</div>
+                <div class="stat-label">CO₂ Emissions Saved</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" th:text="${'$' + stats.fuelMoneySavedUsd}">$180</div>
+                <div class="stat-label">Passenger Fuel Savings</div>
+            </div>
+        </div>
+
+        <!-- Core Features Grid -->
+        <div style="margin-bottom: 50px;">
+            <h2 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 24px; text-align: center;">Why Choose Smart Carpool?</h2>
+            <div class="grid-3">
+                <div class="card">
+                    <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--primary); margin-bottom: 10px;">
+                        🧠 Smart Ride-Matching
+                    </h3>
+                    <p style="color: #475569; font-size: 0.95rem;">
+                        Multi-criteria matching engine evaluates route compatibility (50%), departure time window (20%),
+                        cost efficiency (20%), and seat availability (10%) to rank the most compatible rides.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--primary); margin-bottom: 10px;">
+                        💰 Fair-Split Sharing
+                    </h3>
+                    <p style="color: #475569; font-size: 0.95rem;">
+                        No surge pricing. Drivers set estimated fuel and toll expenses. Costs are divided transparently
+                        among occupants with configurable driver contribution options.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--primary); margin-bottom: 10px;">
+                        🗺️ Interactive OpenStreetMap
+                    </h3>
+                    <p style="color: #475569; font-size: 0.95rem;">
+                        Explore origin, destination, and intermediate pickup stops rendered via Leaflet.js and OpenStreetMap.
+                        Clear visual routes with zero expensive proprietary API keys.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- How It Works Flow -->
+        <div class="card" style="background: #ffffff; padding: 36px;">
+            <h2 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 24px; text-align: center;">How It Works</h2>
+            <div class="grid-2">
+                <div>
+                    <h3 style="color: var(--primary); font-size: 1.2rem; margin-bottom: 12px;">For Drivers</h3>
+                    <ol style="margin-left: 20px; line-height: 2; color: #334155;">
+                        <li>Register your vehicle (Make, Model, License Plate, Capacity).</li>
+                        <li>Publish your upcoming travel route, departure time, and stops.</li>
+                        <li>Set the trip expense; our calculator automatically splits the fare.</li>
+                        <li>Review passenger booking requests and confirm seats.</li>
+                        <li>Mark the trip completed and earn passenger ratings.</li>
+                    </ol>
+                </div>
+                <div>
+                    <h3 style="color: var(--primary); font-size: 1.2rem; margin-bottom: 12px;">For Passengers</h3>
+                    <ol style="margin-left: 20px; line-height: 2; color: #334155;">
+                        <li>Enter your origin and destination to search available rides.</li>
+                        <li>Review ranked matches with transparent compatibility scores.</li>
+                        <li>Confirm your seat reservation with atomic overbooking protection.</li>
+                        <li>Receive in-app status updates for your booking.</li>
+                        <li>Share the journey, reduce travel costs, and rate your driver.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

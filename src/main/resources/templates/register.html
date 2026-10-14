@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Register Account')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="container" style="max-width: 580px; margin-top: 40px;">
+    <div class="card" style="box-shadow: var(--shadow-md);">
+        <div class="card-header" style="justify-content: center; text-align: center;">
+            <div>
+                <h1 class="card-title" style="font-size: 1.5rem;">Create New Account</h1>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Join the Smart Carpool community today</p>
+            </div>
+        </div>
+
+        <form th:action="@{/register}" th:object="${registrationDto}" method="post">
+            <div class="form-group">
+                <label class="form-label">Select Account Role *</label>
+                <div style="display: flex; gap: 20px;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="radio" th:field="*{role}" value="PASSENGER" checked> Passenger (Look for rides)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="radio" th:field="*{role}" value="DRIVER"> Driver (Offer seats & share costs)
+                    </label>
+                </div>
+                <div class="text-danger" th:if="${#fields.hasErrors('role')}" th:errors="*{role}"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="fullName" class="form-label">Full Name *</label>
+                <input type="text" id="fullName" th:field="*{fullName}" class="form-control" placeholder="e.g. John Doe">
+                <div class="text-danger" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address *</label>
+                <input type="email" id="email" th:field="*{email}" class="form-control" placeholder="name@example.com">
+                <div class="text-danger" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="phone" class="form-label">Phone Number</label>
+                <input type="tel" id="phone" th:field="*{phone}" class="form-control" placeholder="+1 555-0199">
+                <div class="text-danger" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="password" class="form-label">Password *</label>
+                    <input type="password" id="password" th:field="*{password}" class="form-control" placeholder="At least 6 characters">
+                    <div class="text-danger" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword" class="form-label">Confirm Password *</label>
+                    <input type="password" id="confirmPassword" th:field="*{confirmPassword}" class="form-control" placeholder="Re-enter password">
+                    <div class="text-danger" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 24px;">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account</button>
+            </div>
+        </form>
+
+        <div style="margin-top: 20px; text-align: center; font-size: 0.9rem;">
+            Already have an account? <a th:href="@{/login}">Sign In here</a>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

@@ -1,0 +1,12 @@
+target/
+build/
+out/
+.vscode/
+.idea/
+.class
+.env
+.env.
+!.env.example
+application-local.properties
+node_modules/
+.DS_Store

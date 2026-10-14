@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Publish New Ride')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="container" style="max-width: 780px; margin-top: 30px;">
+    <div style="margin-bottom: 20px;">
+        <a th:href="@{/driver/dashboard}" class="btn btn-secondary btn-sm">⬅ Back to Driver Dashboard</a>
+    </div>
+
+    <div class="card" style="box-shadow: var(--shadow-md);">
+        <div class="card-header">
+            <h1 class="card-title">Publish a Shared Carpool Ride</h1>
+            <span class="badge badge-primary">Expense Sharing</span>
+        </div>
+
+        <form th:action="@{/driver/rides/new}" th:object="${rideDto}" method="post">
+            <!-- Vehicle Selection -->
+            <div class="form-group">
+                <label for="vehicleId" class="form-label">Select Registered Vehicle *</label>
+                <select id="vehicleId" th:field="*{vehicleId}" class="form-control">
+                    <option value="" disabled selected>-- Choose your vehicle --</option>
+                    <option th:each="v : ${vehicles}" 
+                            th:value="${v.id}" 
+                            th:text="${v.displayName} + ' (Max ' + ${v.capacity} + ' seats)'"></option>
+                </select>
+                <div class="text-danger" th:if="${#fields.hasErrors('vehicleId')}" th:errors="*{vehicleId}"></div>
+            </div>
+
+            <!-- Origin and Destination -->
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="sourceAddress" class="form-label">Pickup Origin Address *</label>
+                    <input type="text" id="sourceAddress" th:field="*{sourceAddress}" class="form-control" placeholder="e.g. Downtown Transit Center">
+                    <div class="text-danger" th:if="${#fields.hasErrors('sourceAddress')}" th:errors="*{sourceAddress}"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="destinationAddress" class="form-label">Destination Address *</label>
+                    <input type="text" id="destinationAddress" th:field="*{destinationAddress}" class="form-control" placeholder="e.g. Tech Innovation Park">
+                    <div class="text-danger" th:if="${#fields.hasErrors('destinationAddress')}" th:errors="*{destinationAddress}"></div>
+                </div>
+            </div>
+
+            <!-- Intermediate Stop (Optional) -->
+            <div class="form-group">
+                <label for="stopName" class="form-label">Intermediate Route Stop (Optional)</label>
+                <input type="text" id="stopName" name="stops[0].stopName" class="form-control" placeholder="e.g. University Campus, Subway Plaza">
+                <div class="form-text">Passengers searching near this stop will also be matched with your ride.</div>
+            </div>
+
+            <!-- Date and Time -->
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="departureDate" class="form-label">Departure Date *</label>
+                    <input type="date" id="departureDate" th:field="*{departureDate}" class="form-control">
+                    <div class="text-danger" th:if="${#fields.hasErrors('departureDate')}" th:errors="*{departureDate}"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="departureTime" class="form-label">Departure Time *</label>
+                    <input type="time" id="departureTime" th:field="*{departureTime}" class="form-control">
+                    <div class="text-danger" th:if="${#fields.hasErrors('departureTime')}" th:errors="*{departureTime}"></div>
+                </div>
+            </div>
+
+            <!-- Seats and Fare Sharing Formula -->
+            <div class="grid-3">
+                <div class="form-group">
+                    <label for="totalSeats" class="form-label">Seats Offered *</label>
+                    <input type="number" id="totalSeats" th:field="*{totalSeats}" min="1" max="8" class="form-control" value="3">
+                    <div class="text-danger" th:if="${#fields.hasErrors('totalSeats')}" th:errors="*{totalSeats}"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="totalTripCost" class="form-label">Est. Total Trip Cost ($) *</label>
+                    <input type="number" id="totalTripCost" th:field="*{totalTripCost}" step="0.50" min="1.00" class="form-control" placeholder="20.00" value="20.00">
+                    <div class="text-danger" th:if="${#fields.hasErrors('totalTripCost')}" th:errors="*{totalTripCost}"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="driverContributionPercent" class="form-label">Driver Contribution (%)</label>
+                    <input type="number" id="driverContributionPercent" th:field="*{driverContributionPercent}" min="0" max="90" step="5" class="form-control" value="20">
+                    <div class="text-danger" th:if="${#fields.hasErrors('driverContributionPercent')}" th:errors="*{driverContributionPercent}"></div>
+                </div>
+            </div>
+
+            <!-- Live Calculation Display Card -->
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 16px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; color: #166534; margin-bottom: 6px;">Live Fare-Sharing Preview</h3>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                    <div style="font-size: 0.9rem; color: #15803d;">
+                        Driver covers: <strong id="calculatedDriverContribution">$4.00</strong> | Remaining shared among passengers:
+                    </div>
+                    <div style="font-size: 1.25rem; font-weight: 800; color: #166534;">
+                        <span id="calculatedSeatCost">$5.33</span> <span style="font-size: 0.8rem; font-weight: 600;">/ passenger seat</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="form-group">
+                <label for="notes" class="form-label">Trip Notes for Passengers</label>
+                <textarea id="notes" th:field="*{notes}" rows="3" class="form-control" placeholder="Luggage space details, AC on, quiet ride, etc."></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px;">
+                <a th:href="@{/driver/dashboard}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Publish Ride</button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

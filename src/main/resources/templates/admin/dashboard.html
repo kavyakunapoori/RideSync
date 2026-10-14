@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Admin Command Console')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="container" style="margin-top: 30px;">
+    <!-- Admin Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <h1 style="font-size: 1.8rem; font-weight: 800; color: #991b1b;">🛡️ System Administrator Dashboard</h1>
+            <p style="color: var(--text-muted);">Real-time governance, environmental audit, user moderation, and trip statistics.</p>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a th:href="@{/admin/users}" class="btn btn-secondary btn-sm">Manage Users</a>
+            <a th:href="@{/admin/rides}" class="btn btn-secondary btn-sm">All Rides</a>
+            <a th:href="@{/admin/bookings}" class="btn btn-secondary btn-sm">All Bookings</a>
+            <a th:href="@{/admin/reports}" class="btn btn-danger btn-sm">
+                Safety Reports
+                <span th:if="${stats.pendingReports > 0}" class="nav-badge" th:text="${stats.pendingReports}">1</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Core Platform Metrics -->
+    <div class="grid-4" style="margin-bottom: 24px;">
+        <div class="stat-box">
+            <div class="stat-number" th:text="${stats.totalUsers}">15</div>
+            <div class="stat-label">Total Users (<span th:text="${stats.totalDrivers}">4</span> Drivers, <span th:text="${stats.totalPassengers}">11</span> Pass)</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number" th:text="${stats.totalRides}">10</div>
+            <div class="stat-label">Total Published Rides (<span th:text="${stats.completedRides}">3</span> Completed)</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number" th:text="${stats.totalBookings}">18</div>
+            <div class="stat-label">Total Bookings (<span th:text="${stats.activeBookings}">5</span> Active)</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number" style="color: #dc2626;" th:text="${stats.cancellationRate + '%'}">5.5%</div>
+            <div class="stat-label">Booking Cancellation Rate</div>
+        </div>
+    </div>
+
+    <!-- Environmental Savings Audit -->
+    <div class="card" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-color: #86efac; margin-bottom: 30px;">
+        <div class="card-header" style="border-bottom-color: #bbf7d0;">
+            <h2 class="card-title" style="color: #166534;">🌿 Verified Environmental & Resource Savings</h2>
+            <span class="badge badge-success">Sustainability Metric</span>
+        </div>
+        <div class="grid-2">
+            <div>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #15803d;" th:text="${stats.co2SavedKg + ' kg CO₂'}">
+                    54.2 kg CO₂
+                </div>
+                <div style="font-size: 0.95rem; color: #166534; font-weight: 600;">Net Atmospheric Carbon Emissions Prevented</div>
+                <p style="font-size: 0.85rem; color: #374151; margin-top: 6px;">
+                    Calculated using standard 0.18 kg CO₂ / km per single-occupancy vehicle offset across all shared carpool legs.
+                </p>
+            </div>
+            <div>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #0284c7;" th:text="${'$' + stats.fuelMoneySavedUsd}">
+                    $240.00
+                </div>
+                <div style="font-size: 0.95rem; color: #0369a1; font-weight: 600;">Estimated Commuter Travel Expense Saved</div>
+                <p style="font-size: 0.85rem; color: #374151; margin-top: 6px;">
+                    Calculated from combined fuel, highway tolls, and wear saved by participating university/city passengers.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Incident / Safety Reports -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Pending Moderation Reports (<span th:text="${#lists.size(recentReports)}">0</span>)</h2>
+            <a th:href="@{/admin/reports}" class="btn btn-secondary btn-sm">Full Report Queue</a>
+        </div>
+
+        <div th:if="${#lists.isEmpty(recentReports)}" style="text-align: center; padding: 30px; color: var(--text-muted);">
+            No pending community reports. System operating cleanly!
+        </div>
+
+        <div th:if="${!#lists.isEmpty(recentReports)}" class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Reporter</th>
+                        <th>Reported Entity</th>
+                        <th>Reason / Incident Details</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="r : ${recentReports}">
+                        <td><strong th:text="${r.reporter.fullName}">Reporter</strong></td>
+                        <td>
+                            <div th:if="${r.reportedUser != null}">User: <strong th:text="${r.reportedUser.fullName}">User</strong></div>
+                            <div th:if="${r.reportedRide != null}">Ride ID: <code th:text="'#' + ${r.reportedRide.id}">#1</code></div>
+                        </td>
+                        <td th:text="${r.reason}">Reason text</td>
+                        <td>
+                            <span th:if="${r.status.name() == 'PENDING'}" class="badge badge-warning">Pending</span>
+                            <span th:if="${r.status.name() == 'RESOLVED'}" class="badge badge-success">Resolved</span>
+                        </td>
+                        <td>
+                            <form th:if="${r.status.name() == 'PENDING'}" th:action="@{/admin/reports/{id}/resolve(id=${r.id})}" method="post">
+                                <button type="submit" class="btn btn-primary btn-sm">Resolve</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

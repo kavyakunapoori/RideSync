@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('My Booking History')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="container" style="margin-top: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h1 style="font-size: 1.8rem; font-weight: 800;">My Ride Bookings</h1>
+        <a th:href="@{/passenger/search}" class="btn btn-primary btn-sm">+ Find New Ride</a>
+    </div>
+
+    <div class="card">
+        <div th:if="${#lists.isEmpty(bookings)}" style="text-align: center; padding: 40px 20px; color: var(--text-muted);">
+            <p style="font-size: 1.1rem; margin-bottom: 12px;">You do not have any booking records yet.</p>
+            <a th:href="@{/passenger/search}" class="btn btn-primary btn-sm">Browse Available Rides</a>
+        </div>
+
+        <div th:if="${!#lists.isEmpty(bookings)}" class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Route</th>
+                        <th>Departure Date & Time</th>
+                        <th>Driver Details</th>
+                        <th>Seats</th>
+                        <th>Total Fare</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="b : ${bookings}">
+                        <td><code th:text="'#' + ${b.id}">#1</code></td>
+                        <td>
+                            <strong th:text="${b.ride.sourceAddress}">Origin</strong> ➔ 
+                            <span th:text="${b.ride.destinationAddress}">Destination</span>
+                            <div th:if="${b.pickupLocation != null && b.pickupLocation != b.ride.sourceAddress}" 
+                                 style="font-size: 0.8rem; color: #0284c7;">
+                                Pickup: <span th:text="${b.pickupLocation}">Pickup spot</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div th:text="${b.ride.departureDate}">2026-10-15</div>
+                            <small style="color: var(--text-muted);" th:text="${b.ride.departureTime}">08:30 AM</small>
+                        </td>
+                        <td>
+                            <strong th:text="${b.ride.driver.fullName}">John Driver</strong>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);" th:text="${b.ride.vehicle.displayName}">Car</div>
+                        </td>
+                        <td th:text="${b.seatsBooked}">1</td>
+                        <td><strong th:text="${'$' + b.totalFare}">$3.75</strong></td>
+                        <td>
+                            <span th:if="${b.status.name() == 'CONFIRMED'}" class="badge badge-success">Confirmed</span>
+                            <span th:if="${b.status.name() == 'PENDING'}" class="badge badge-warning">Pending</span>
+                            <span th:if="${b.status.name() == 'COMPLETED'}" class="badge badge-primary">Completed</span>
+                            <span th:if="${b.status.name() == 'CANCELLED'}" class="badge badge-danger">Cancelled</span>
+                            <span th:if="${b.status.name() == 'REJECTED'}" class="badge badge-danger">Declined</span>
+                            <div th:if="${b.cancellationReason != null}" style="font-size: 0.75rem; color: #991b1b; margin-top: 4px;" th:text="${b.cancellationReason}"></div>
+                        </td>
+                        <td>
+                            <a th:if="${b.status.name() == 'COMPLETED' && !b.rated}" 
+                               th:href="@{/ratings/booking/{id}(id=${b.id})}" class="btn btn-primary btn-sm">
+                                Rate Driver ⭐
+                            </a>
+                            <span th:if="${b.status.name() == 'COMPLETED' && b.rated}" class="badge badge-secondary">
+                                Rated ✓
+                            </span>
+                            <form th:if="${b.canBeCancelled()}" 
+                                  th:action="@{/passenger/bookings/{id}/cancel(id=${b.id})}" method="post" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to cancel this booking? Reserved seats will be released.');">
+                                    Cancel
+                                </button>
+                            </form>
+                            <a th:href="@{/rides/{id}(id=${b.ride.id})}" class="btn btn-secondary btn-sm">Route</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

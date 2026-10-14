@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('My Savings & Environmental Impact')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="container" style="max-width: 800px; margin-top: 30px;">
+    <div style="margin-bottom: 20px;">
+        <a th:href="@{/passenger/dashboard}" class="btn btn-secondary btn-sm">⬅ Back to Dashboard</a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">My Cumulative Cost & Environmental Savings</h1>
+            <span class="badge badge-success">Eco Impact</span>
+        </div>
+
+        <p style="color: #475569; margin-bottom: 24px;">
+            By sharing rides rather than ordering individual commercial cabs or driving alone, 
+            you directly reduce highway traffic congestion and vehicular greenhouse gas emissions.
+        </p>
+
+        <div class="grid-3" style="margin-bottom: 30px;">
+            <div class="stat-box">
+                <div class="stat-number" th:text="${'$' + totalSpent}">$15.00</div>
+                <div class="stat-label">Total Shared Fare Paid</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" style="color: #16a34a;" th:text="${'$' + totalSavings}">$22.50</div>
+                <div class="stat-label">Estimated Money Saved</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" style="color: #0284c7;" th:text="${co2SavedKg + ' kg'}">12.5 kg</div>
+                <div class="stat-label">CO₂ Emissions Avoided</div>
+            </div>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid var(--border-color); padding: 20px; border-radius: var(--radius-sm);">
+            <h2 style="font-size: 1.1rem; font-weight: 700; color: #1e3a8a; margin-bottom: 10px;">How is this calculated?</h2>
+            <ul style="margin-left: 20px; line-height: 1.8; color: #334155; font-size: 0.95rem;">
+                <li><strong>Baseline Comparison:</strong> Commercial solo ride-hail / private driving is estimated at 2.5× the cost of proportional carpool fuel sharing.</li>
+                <li><strong>Carbon Reduction Factor:</strong> A standard passenger vehicle emits approx. 0.18 kg of CO₂ per km. Grouping 2 to 4 commuters in a single vehicle eliminates unnecessary tailpipe emissions.</li>
+                <li><strong>Completed Journeys:</strong> <strong th:text="${tripCount}">3</strong> completed trip(s) recorded in your profile.</li>
+            </ul>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

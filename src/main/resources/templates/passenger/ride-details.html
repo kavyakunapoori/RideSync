@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: header('Ride Details')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="container" style="margin-top: 30px;">
+    <div style="margin-bottom: 20px;">
+        <a th:href="@{/passenger/search}" class="btn btn-secondary btn-sm">⬅ Back to Search</a>
+    </div>
+
+    <div class="grid-2">
+        <!-- Left: Ride & Driver Information Card -->
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">Ride Overview</h1>
+                <span th:if="${ride.status.name() == 'PLANNED'}" class="badge badge-success">Active & Bookable</span>
+                <span th:if="${ride.status.name() == 'COMPLETED'}" class="badge badge-primary">Completed</span>
+                <span th:if="${ride.status.name() == 'CANCELLED'}" class="badge badge-danger">Cancelled</span>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 1.3rem; color: var(--primary); margin-bottom: 8px;">
+                    <span th:text="${ride.sourceAddress}">Origin</span> ➔ <span th:text="${ride.destinationAddress}">Destination</span>
+                </h2>
+                <div style="color: #64748b; font-size: 0.95rem;">
+                    Departure: <strong th:text="${ride.departureDate}">2026-10-15</strong> at <strong th:text="${ride.departureTime}">08:30</strong>
+                </div>
+            </div>
+
+            <!-- Route stops -->
+            <div th:if="${!#lists.isEmpty(ride.stops)}" style="margin-bottom: 20px; background: #f0f9ff; padding: 14px; border-radius: var(--radius-sm); border: 1px solid #bae6fd;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; color: #0369a1; margin-bottom: 6px;">Intermediate Checkpoints & Stops</h3>
+                <ol style="margin-left: 20px; font-size: 0.9rem; color: #0c4a6e;">
+                    <li th:each="s : ${ride.stops}" th:text="${s.stopName}">Campus Station</li>
+                </ol>
+            </div>
+
+            <!-- Fare Sharing Details -->
+            <div style="background: #f8fafc; border: 1px solid var(--border-color); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+                <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 10px; color: #1e293b;">Fare Sharing Breakdown</h3>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.95rem;">
+                    <span>Driver Total Trip Expense:</span>
+                    <strong th:text="${'$' + ride.totalTripCost}">$20.00</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.95rem;">
+                    <span>Driver Self-Contribution:</span>
+                    <span th:text="${ride.driverContributionPercent + '%'}">25%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--border-color); padding-top: 8px; margin-top: 8px; font-size: 1.1rem; font-weight: 700;">
+                    <span>Passenger Fare Per Seat:</span>
+                    <span style="color: #16a34a;" th:text="${'$' + ride.passengerCost}">$3.75</span>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                    *Displayed fare is an estimated shared contribution toward fuel and tolls. No extra commercial surge fees.
+                </div>
+            </div>
+
+            <!-- Vehicle & Driver Card -->
+            <div style="border: 1px solid var(--border-color); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+                <h3 style="font-size: 1rem; font-weight: 700; margin-bottom: 8px; color: #1e293b;">Vehicle & Driver</h3>
+                <p><strong>Vehicle:</strong> <span th:text="${ride.vehicle.displayName}">Toyota Camry</span> (<span th:text="${ride.vehicle.color}">Silver</span>)</p>
+                <p><strong>Driver:</strong> <span th:text="${ride.driver.fullName}">John Driver</span></p>
+                <p th:if="${driverRating != null}">
+                    <strong>Driver Rating:</strong> 
+                    <span style="color: #eab308; font-weight: 700;">★ <span th:text="${driverRating}">4.9</span> / 5.0</span>
+                    (<span th:text="${ratingCount}">12</span> reviews)
+                </p>
+            </div>
+
+            <div th:if="${ride.notes != null && !ride.notes.isBlank()}" style="margin-bottom: 20px;">
+                <h3 style="font-size: 0.95rem; font-weight: 700; color: #475569;">Driver Notes:</h3>
+                <p style="font-size: 0.9rem; color: #334155;" th:text="${ride.notes}">Notes</p>
+            </div>
+
+            <!-- Action buttons -->
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <a th:if="${ride.isBookable() && (isDriverOfThisRide == null || !isDriverOfThisRide)}" 
+                   th:href="@{/rides/{id}/book(id=${ride.id})}" class="btn btn-primary">
+                    Book Seats Now
+                </a>
+                <span th:if="${ride.availableSeats == 0 && ride.status.name() == 'PLANNED'}" class="badge badge-warning" style="font-size: 1rem;">
+                    Ride is Full
+                </span>
+                <a th:if="${isDriverOfThisRide == null || !isDriverOfThisRide}" 
+                   th:href="@{/reports/ride/{id}(id=${ride.id})}" class="btn btn-secondary btn-sm" style="margin-left: auto;">
+                    Report Ride
+                </a>
+            </div>
+        </div>
+
+        <!-- Right: Map View with stops -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Route Visualization</h2>
+                <span class="badge badge-primary">OpenStreetMap</span>
+            </div>
+            <div id="map"></div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 10px;">
+                🟢 Green marker: Origin | 🟠 Orange markers: En route stops | 🔴 Red marker: Destination
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", function () {
+        /*<![CDATA[*/
+        const oLat = /*[[${ride.sourceLatitude}]]*/ 40.7128;
+        const oLng = /*[[${ride.sourceLongitude}]]*/ -74.0060;
+        const dLat = /*[[${ride.destinationLatitude}]]*/ 40.7589;
+        const dLng = /*[[${ride.destinationLongitude}]]*/ -73.9851;
+        const oName = /*[[${ride.sourceAddress}]]*/ "Origin";
+        const dName = /*[[${ride.destinationAddress}]]*/ "Destination";
+
+        // Collect stops
+        const stopsData = [];
+        /*[# th:each="s : ${ride.stops}"]*/
+        stopsData.push({
+            name: /*[[${s.stopName}]]*/ "Stop",
+            lat: /*[[${s.latitude}]]*/ 0.0,
+            lng: /*[[${s.longitude}]]*/ 0.0
+        });
+        /*[/]*/
+
+        initRideMap("map", oLat, oLng, dLat, dLng, stopsData, oName, dName);
+        /*]]>*/
+    });
+</script>
+
+</body>
+</html>

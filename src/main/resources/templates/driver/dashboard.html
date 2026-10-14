@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Driver Dashboard')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="container" style="margin-top: 30px;">
+    <!-- Welcome Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <h1 style="font-size: 1.8rem; font-weight: 800;">Driver Command Center</h1>
+            <p style="color: var(--text-muted);">Manage your published trips, approve passenger bookings, and track shared expense contributions.</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a th:href="@{/driver/rides/new}" class="btn btn-primary">+ Publish New Ride</a>
+            <a th:href="@{/driver/vehicles}" class="btn btn-secondary">My Vehicles</a>
+            <a th:href="@{/driver/reviews}" class="btn btn-secondary">Reviews</a>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="grid-4" style="margin-bottom: 30px;">
+        <div class="stat-box">
+            <div class="stat-number" th:text="${#lists.size(rides)}">3</div>
+            <div class="stat-label">Total Rides Offered</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number" th:text="${#lists.size(bookings)}">5</div>
+            <div class="stat-label">Passenger Bookings</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number" style="color: #16a34a;" th:text="${'$' + totalCollected}">$28.50</div>
+            <div class="stat-label">Cost Contributions Collected</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number" style="color: #eab308;">
+                <span th:if="${avgRating != null}" th:text="${avgRating + ' ★'}">4.9 ★</span>
+                <span th:if="${avgRating == null}">N/A</span>
+            </div>
+            <div class="stat-label" th:text="${totalReviews + ' Passenger Reviews'}">Reviews</div>
+        </div>
+    </div>
+
+    <!-- Incoming Passenger Booking Requests -->
+    <div class="card" style="margin-bottom: 30px;">
+        <div class="card-header">
+            <h2 class="card-title">Recent Passenger Bookings</h2>
+            <span class="badge badge-primary">Seat Management</span>
+        </div>
+
+        <div th:if="${#lists.isEmpty(bookings)}" style="text-align: center; padding: 30px; color: var(--text-muted);">
+            No bookings have been made on your rides yet.
+        </div>
+
+        <div th:if="${!#lists.isEmpty(bookings)}" class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Passenger</th>
+                        <th>Trip Route</th>
+                        <th>Date & Time</th>
+                        <th>Seats</th>
+                        <th>Fare Share</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="b : ${bookings}">
+                        <td>
+                            <strong th:text="${b.passenger.fullName}">Alice</strong>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);" th:text="${b.passenger.email}">alice@example.com</div>
+                            <div th:if="${b.passenger.phone != null}" style="font-size: 0.8rem; color: #0284c7;" th:text="'📞 ' + ${b.passenger.phone}">Phone</div>
+                        </td>
+                        <td>
+                            <strong th:text="${b.ride.sourceAddress}">Origin</strong> ➔ <span th:text="${b.ride.destinationAddress}">Dest</span>
+                        </td>
+                        <td>
+                            <div th:text="${b.ride.departureDate}">2026-10-15</div>
+                            <small style="color: var(--text-muted);" th:text="${b.ride.departureTime}">08:30</small>
+                        </td>
+                        <td th:text="${b.seatsBooked}">1</td>
+                        <td><strong th:text="${'$' + b.totalFare}">$3.75</strong></td>
+                        <td>
+                            <span th:if="${b.status.name() == 'CONFIRMED'}" class="badge badge-success">Confirmed</span>
+                            <span th:if="${b.status.name() == 'PENDING'}" class="badge badge-warning">Pending Approval</span>
+                            <span th:if="${b.status.name() == 'COMPLETED'}" class="badge badge-primary">Completed</span>
+                            <span th:if="${b.status.name() == 'CANCELLED'}" class="badge badge-danger">Cancelled</span>
+                        </td>
+                        <td>
+                            <div th:if="${b.status.name() == 'PENDING'}" style="display: flex; gap: 6px;">
+                                <form th:action="@{/driver/bookings/{id}/accept(id=${b.id})}" method="post">
+                                    <button type="submit" class="btn btn-success btn-sm">Accept</button>
+                                </form>
+                                <form th:action="@{/driver/bookings/{id}/reject(id=${b.id})}" method="post">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Decline this booking?');">Decline</button>
+                                </form>
+                            </div>
+                            <a th:href="@{/driver/rides/{id}(id=${b.ride.id})}" class="btn btn-secondary btn-sm">View Trip</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Published Rides List -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">My Published Rides</h2>
+            <a th:href="@{/driver/rides/new}" class="btn btn-primary btn-sm">+ Add Ride</a>
+        </div>
+
+        <div th:if="${#lists.isEmpty(rides)}" style="text-align: center; padding: 40px; color: var(--text-muted);">
+            <p style="font-size: 1.1rem; margin-bottom: 12px;">You haven't published any rides yet.</p>
+            <a th:href="@{/driver/rides/new}" class="btn btn-primary btn-sm">Publish Your First Ride</a>
+        </div>
+
+        <div th:if="${!#lists.isEmpty(rides)}" class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Route</th>
+                        <th>Date & Time</th>
+                        <th>Vehicle</th>
+                        <th>Seats (Avail/Total)</th>
+                        <th>Fare / Seat</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="r : ${rides}">
+                        <td>
+                            <strong th:text="${r.sourceAddress}">Origin</strong> ➔ <span th:text="${r.destinationAddress}">Destination</span>
+                            <div th:if="${!#lists.isEmpty(r.stops)}" style="font-size: 0.8rem; color: #0284c7;">
+                                Stops: <span th:each="s, iter : ${r.stops}" th:text="${s.stopName} + (${!iter.last} ? ', ' : '')"></span>
+                            </div>
+                        </td>
+                        <td>
+                            <div th:text="${r.departureDate}">2026-10-15</div>
+                            <small style="color: var(--text-muted);" th:text="${r.departureTime}">08:30</small>
+                        </td>
+                        <td th:text="${r.vehicle.displayName}">Toyota Camry</td>
+                        <td>
+                            <strong th:text="${r.availableSeats}">3</strong> / <span th:text="${r.totalSeats}">4</span>
+                        </td>
+                        <td><strong th:text="${'$' + r.passengerCost}">$3.75</strong></td>
+                        <td>
+                            <span th:if="${r.status.name() == 'PLANNED'}" class="badge badge-success">Planned</span>
+                            <span th:if="${r.status.name() == 'ACTIVE'}" class="badge badge-primary">Active</span>
+                            <span th:if="${r.status.name() == 'COMPLETED'}" class="badge badge-secondary">Completed</span>
+                            <span th:if="${r.status.name() == 'CANCELLED'}" class="badge badge-danger">Cancelled</span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 6px;">
+                                <a th:href="@{/driver/rides/{id}(id=${r.id})}" class="btn btn-secondary btn-sm">Manage</a>
+                                <form th:if="${r.status.name() == 'PLANNED' || r.status.name() == 'ACTIVE'}" 
+                                      th:action="@{/driver/rides/{id}/complete(id=${r.id})}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Mark this ride as completed?');">
+                                        Finish
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Confirm Booking')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="container" style="max-width: 650px; margin-top: 30px;">
+    <div class="card" style="box-shadow: var(--shadow-md);">
+        <div class="card-header">
+            <h1 class="card-title">Confirm Seat Reservation</h1>
+            <span class="badge badge-success">Transparent Fare Sharing</span>
+        </div>
+
+        <!-- Trip Summary -->
+        <div style="background: #f8fafc; border: 1px solid var(--border-color); padding: 18px; border-radius: var(--radius-sm); margin-bottom: 24px;">
+            <div style="font-size: 1.15rem; font-weight: 700; color: var(--primary); margin-bottom: 6px;">
+                <span th:text="${ride.sourceAddress}">Origin</span> ➔ <span th:text="${ride.destinationAddress}">Destination</span>
+            </div>
+            <div style="font-size: 0.95rem; color: #475569; margin-bottom: 4px;">
+                📅 <strong th:text="${ride.departureDate}">2026-10-15</strong> at <strong th:text="${ride.departureTime}">08:30</strong>
+            </div>
+            <div style="font-size: 0.95rem; color: #475569;">
+                🚘 <span th:text="${ride.vehicle.displayName}">Toyota Camry</span> • Driver: <strong th:text="${ride.driver.fullName}">John Driver</strong>
+            </div>
+        </div>
+
+        <form th:action="@{/rides/{id}/book(id=${ride.id})}" th:object="${bookingDto}" method="post">
+            <div class="form-group">
+                <label for="seatsBooked" class="form-label">Number of Seats to Reserve *</label>
+                <select id="seatsBooked" th:field="*{seatsBooked}" class="form-control" onchange="updateBookingTotal(this.value)">
+                    <option th:each="i : ${#numbers.sequence(1, ride.availableSeats)}" 
+                            th:value="${i}" th:text="${i} + ' Seat(s)'" 
+                            th:selected="${i == seats}"></option>
+                </select>
+                <div class="form-text">Currently available seats on this vehicle: <strong th:text="${ride.availableSeats}">3</strong></div>
+            </div>
+
+            <div class="form-group">
+                <label for="pickupLocation" class="form-label">Preferred Pickup Spot (Optional)</label>
+                <input type="text" id="pickupLocation" th:field="*{pickupLocation}" class="form-control" placeholder="Defaults to ride origin">
+            </div>
+
+            <div class="form-group">
+                <label for="dropoffLocation" class="form-label">Preferred Drop-off Spot (Optional)</label>
+                <input type="text" id="dropoffLocation" th:field="*{dropoffLocation}" class="form-control" placeholder="Defaults to ride destination">
+            </div>
+
+            <!-- Calculation and Comparison Box -->
+            <div style="border: 1px solid #bfdbfe; background: #eff6ff; padding: 18px; border-radius: var(--radius-sm); margin: 24px 0;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #1e3a8a; margin-bottom: 12px;">Financial Comparison & Savings</h3>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.95rem;">
+                    <span>Carpool Share Cost per Seat:</span>
+                    <strong th:text="${'$' + ride.passengerCost}">$3.75</strong>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.95rem;">
+                    <span>Estimated Solo Cab Cost:</span>
+                    <span style="color: #64748b; text-decoration: line-through;" id="soloCostDisplay" th:text="${'$' + estimatedSoloCost}">$9.38</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; border-top: 1px dashed #93c5fd; padding-top: 10px; margin-top: 8px; font-size: 1.15rem; font-weight: 800;">
+                    <span>Total Carpool Fare:</span>
+                    <span style="color: #16a34a;" id="totalFareDisplay" th:text="${'$' + totalCost}">$3.75</span>
+                </div>
+
+                <div style="margin-top: 10px; font-size: 0.85rem; color: #15803d; font-weight: 600;">
+                    🌱 You are saving an estimated <span id="savingsDisplay" th:text="${'$' + savings}">$5.63</span> and preventing approx. 3.2 kg CO₂!
+                </div>
+            </div>
+
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 20px;">
+                *Note: Displayed fares are direct cost contributions toward vehicle fuel and toll expenses. Seats are reserved upon confirmation.
+            </p>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <a th:href="@{/rides/{id}(id=${ride.id})}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Confirm & Book Seats</button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const perSeatCost = /*[[${ride.passengerCost}]]*/ 3.75;
+
+    function updateBookingTotal(seatCount) {
+        const count = parseInt(seatCount, 10) || 1;
+        const total = (perSeatCost * count).toFixed(2);
+        const solo = (total * 2.5).toFixed(2);
+        const savings = (solo - total).toFixed(2);
+
+        document.getElementById("totalFareDisplay").textContent = "$" + total;
+        document.getElementById("soloCostDisplay").textContent = "$" + solo;
+        document.getElementById("savingsDisplay").textContent = "$" + savings;
+    }
+    /*]]>*/
+</script>
+
+</body>
+</html>

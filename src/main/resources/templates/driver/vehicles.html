@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Manage Vehicles')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="container" style="margin-top: 30px;">
+    <div style="margin-bottom: 20px;">
+        <a th:href="@{/driver/dashboard}" class="btn btn-secondary btn-sm">⬅ Back to Driver Dashboard</a>
+    </div>
+
+    <div class="grid-2">
+        <!-- Vehicles List -->
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">My Registered Vehicles</h1>
+                <span class="badge badge-primary" th:text="${#lists.size(vehicles)} + ' Active'">1 Active</span>
+            </div>
+
+            <div th:if="${#lists.isEmpty(vehicles)}" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                <p>No vehicles registered yet. Add your vehicle to begin publishing rides.</p>
+            </div>
+
+            <div th:each="v : ${vehicles}" style="border: 1px solid var(--border-color); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 14px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                        <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--primary); margin-bottom: 4px;" th:text="${v.displayName}">
+                            Toyota Camry (XYZ-7890)
+                        </h2>
+                        <div style="font-size: 0.9rem; color: #475569;">
+                            Color: <span th:text="${v.color}">Silver</span> • Year: <span th:text="${v.year}">2023</span>
+                        </div>
+                        <div style="font-size: 0.9rem; color: #16a34a; font-weight: 600; margin-top: 4px;">
+                            Capacity: <span th:text="${v.capacity}">4</span> Passenger Seats
+                        </div>
+                    </div>
+                    <span class="badge badge-success">Verified</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Vehicle Form -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Register New Vehicle</h2>
+                <span class="badge badge-secondary">Fast Setup</span>
+            </div>
+
+            <form th:action="@{/driver/vehicles}" th:object="${vehicleDto}" method="post">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="make" class="form-label">Vehicle Make *</label>
+                        <input type="text" id="make" th:field="*{make}" class="form-control" placeholder="e.g. Toyota, Honda">
+                        <div class="text-danger" th:if="${#fields.hasErrors('make')}" th:errors="*{make}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="model" class="form-label">Vehicle Model *</label>
+                        <input type="text" id="model" th:field="*{model}" class="form-control" placeholder="e.g. Camry, Civic">
+                        <div class="text-danger" th:if="${#fields.hasErrors('model')}" th:errors="*{model}"></div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="year" class="form-label">Model Year *</label>
+                        <input type="number" id="year" th:field="*{year}" class="form-control" placeholder="2023" min="1995" max="2030">
+                        <div class="text-danger" th:if="${#fields.hasErrors('year')}" th:errors="*{year}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="licensePlate" class="form-label">License Plate *</label>
+                        <input type="text" id="licensePlate" th:field="*{licensePlate}" class="form-control" placeholder="e.g. ABC-1234">
+                        <div class="text-danger" th:if="${#fields.hasErrors('licensePlate')}" th:errors="*{licensePlate}"></div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="color" class="form-label">Vehicle Color</label>
+                        <input type="text" id="color" th:field="*{color}" class="form-control" placeholder="e.g. Silver, Blue, Black">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="capacity" class="form-label">Seating Capacity *</label>
+                        <input type="number" id="capacity" th:field="*{capacity}" class="form-control" placeholder="4" min="1" max="8">
+                        <div class="text-danger" th:if="${#fields.hasErrors('capacity')}" th:errors="*{capacity}"></div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 16px;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Add Vehicle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

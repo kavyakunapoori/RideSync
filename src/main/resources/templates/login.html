@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: header('Sign In')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div th:replace="~{fragments/layout :: alerts}"></div>
+
+<main class="container" style="max-width: 520px; margin-top: 40px;">
+    <div class="card" style="box-shadow: var(--shadow-md);">
+        <div class="card-header" style="justify-content: center; text-align: center;">
+            <div>
+                <h1 class="card-title" style="font-size: 1.5rem;">Sign In to Smart Carpool</h1>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">Enter your credentials to continue</p>
+            </div>
+        </div>
+
+        <form th:action="@{/login}" method="post">
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" id="email" name="username" class="form-control" required placeholder="name@example.com" autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="password" class="form-control" required placeholder="Enter password">
+            </div>
+
+            <div class="form-group" style="margin-top: 24px;">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+            </div>
+        </form>
+
+        <!-- College Demo Quick Fill Helper -->
+        <div style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--border-color); text-align: center;">
+            <p style="font-size: 0.85rem; font-weight: 700; color: #475569; margin-bottom: 10px;">
+                🎓 One-Click Demo Evaluator Accounts:
+            </p>
+            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="fillLogin('driver')">
+                    🚗 Demo Driver
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="fillLogin('passenger')">
+                    🎒 Demo Passenger
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="fillLogin('admin')">
+                    🛡️ Demo Admin
+                </button>
+            </div>
+            <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 8px;">
+                Click any button to fill email and password automatically.
+            </p>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center; font-size: 0.9rem;">
+            Don't have an account? <a th:href="@{/register}">Sign Up here</a>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>
